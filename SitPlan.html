@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ILBC Exclusive Sitting Plan Maker</title>
+<style>
+:root {
+  --bg-color: #f8f9fa;
+  --text-color: #222;
+  --seat-assigned: #4CAF50;
+  --seat-empty: #ddd;
+  --modal-bg: #fff;
+  --btn-bg: #007bff;
+  --btn-hover: #0056b3;
+  --textarea-bg: #fff;
+  --textarea-color: #222;
+}
+[data-theme="dark"] {
+  --bg-color: #1e1e1e;
+  --text-color: #eee;
+  --seat-assigned: #66bb6a;
+  --seat-empty: #555;
+  --modal-bg: #2a2a2a;
+  --btn-bg: #2196f3;
+  --btn-hover: #1976d2;
+  --textarea-bg: #333;
+  --textarea-color: #eee;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--bg-color), #d0e6ff);
+  color: var(--text-color);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background 0.5s, color 0.5s;
+}
+
+textarea {
+  width: 300px;
+  height: 120px;
+  margin-bottom: 10px;
+  padding: 10px;
+  font-size: 14px;
+  border-radius:6px;
+  background: var(--textarea-bg);
+  color: var(--textarea-color);
+  border:1px solid #ccc;
+  white-space: pre-line;
+}
+
+button {
+  background: var(--btn-bg);
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 14px;
+  margin: 5px;
+}
+button:hover { background: var(--btn-hover); }
+
+.grid {
+  display: grid;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(120px,1fr));
+  max-width: 700px;
+  margin-left:auto;
+  margin-right:auto;
+}
+.seat {
+  background: var(--seat-empty);
+  border: 2px solid #333;
+  border-radius: 8px;
+  padding: 20px;
+  min-width: 100px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+.seat.assigned { background: var(--seat-assigned); color:white; }
+
+.loading {
+  font-size:18px;
+  font-weight:bold;
+  color: var(--btn-bg);
+  margin-top:20px;
+}
+
+.watermark-top-left { position:absolute; top:5px; left:10px; font-size:16px; color:#666; opacity:0.8; font-weight:bold; }
+.watermark-top-right { position:absolute; top:5px; right:10px; font-size:22px; font-family: Arial, sans-serif; color:#444; opacity:0.9; font-weight:bold; }
+.watermark-center {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-45deg);
+  font-size:150px; color:rgba(0,0,0,0.1); font-weight:bold; pointer-events:none; user-select:none; white-space:nowrap;
+}
+
+.slot-list { position:absolute; right:20px; top:200px; max-height:300px; overflow-y:auto; width:160px; text-align:left; }
+.slot-list button { display:block; margin-bottom:5px; width:100%; font-size:13px; position:relative; }
+.delete-slot-btn { position:absolute; right:5px; top:2px; background:red; border:none; border-radius:4px; color:white; font-size:12px; cursor:pointer; padding:0 4px; }
+.delete-slot-btn:hover { background:#c00; }
+
+.clear-btn { background:#dc3545; margin-top:5px; }
+.clear-btn:hover { background:#c82333; }
+
+.modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
+.modal-box { background: var(--modal-bg); padding:30px 40px; border-radius:12px; text-align:center; max-width:400px; box-shadow:0 5px 15px rgba(0,0,0,0.3); color: var(--text-color); }
+.modal-box h2 { margin-bottom:10px; }
+.modal-box p { margin-bottom:20px; }
+.modal-ok-btn { background: var(--btn-bg); color:white; padding:8px 20px; border:none; border-radius:6px; cursor:pointer; font-size:14px; }
+.modal-ok-btn:hover { background: var(--btn-hover); }
+
+.theme-btn { position:absolute; top:50px; right:20px; background:#ffa500; }
+.theme-btn:hover { background:#e69500; }
+
+#slotInputBox { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--modal-bg); padding:30px; border-radius:12px; z-index:1100; width:300px; box-shadow:0 5px 15px rgba(0,0,0,0.3); text-align:center; }
+#slotInputBox input { width:90%; padding:6px; margin-bottom:10px; }
+#slotInputBox button { margin:5px; }
+
+</style>
+</head>
+<body data-theme="light">
+
+<div class="watermark-top-left">@htunwe-dev</div>
+<div class="watermark-top-right">HMA-PROMAX</div>
+<div class="watermark-center">@huiya</div>
+
+<h1>ILBC Exclusive Sitting Plan Maker</h1>
+<p>Enter student names (one per line):</p>
+<textarea id="namesInput" placeholder="Htun Myat Aung-Dev&#10;Wish you luck"></textarea><br>
+
+<div>
+<button onclick="addBox()">➕ Add Box</button>
+<button onclick="removeBox()">➖ Remove Box</button>
+<button onclick="shuffleSeats()">🎲 Shuffle</button>
+<button class="clear-btn" onclick="clearAll()">🗑️ Clear All</button>
+<button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+<button onclick="showSlotInputBox()">💾 Add Slot</button>
+</div>
+
+<div class="slot-list" id="slotList"></div>
+<div id="output"></div>
+
+<!-- Notice Modal -->
+<div class="modal-overlay" id="noticeModal">
+  <div class="modal-box">
+    <h2>Notice</h2>
+    <p>This is not biased but fair and justice.<br>Do not blame me if bad luck LOL</p>
+    <button class="modal-ok-btn" onclick="closeModal()">OK</button>
+  </div>
+</div>
+
+<!-- Slot Input Modal -->
+<div id="slotInputBox">
+  <h3>Enter Slot Name</h3>
+  <input type="text" id="newSlotName" placeholder="My Slot">
+  <br>
+  <button onclick="confirmAddSlot()">OK</button>
+  <button onclick="cancelAddSlot()">Cancel</button>
+</div>
+
+<!-- Delete Slot Modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal-box">
+    <p id="deleteModalText"></p>
+    <button class="modal-ok-btn" onclick="closeDeleteModal()">OK</button>
+  </div>
+</div>
+
+<script>
+let totalSeats=1;
+let slots=JSON.parse(localStorage.getItem("userSlots")||"{}");
+
+if(!slots["SEC-3 B"]){
+  slots["SEC-3 B"] = ["BTK","HMA","KLLW","LHRD","TOY","TRO","PJ","TSTN","SPPA","SYS","ZSA","PHH","NPPW","JCRMN","WSA"].sort();
+  saveSlots();
+}
+
+function saveSlots(){ 
+  localStorage.setItem("userSlots", JSON.stringify(slots)); 
+  renderSlotButtons(); 
+}
+
+function renderSlotButtons(){
+  const container=document.getElementById("slotList"); container.innerHTML="";
+  for(const name in slots){
+    const wrapper=document.createElement("div"); wrapper.style.position="relative";
+    const btn=document.createElement("button"); btn.textContent=name; btn.onclick=()=>loadSlot(name);
+    wrapper.appendChild(btn);
+
+    if(name!=="SEC-3 B"){
+      const delBtn=document.createElement("button");
+      delBtn.className="delete-slot-btn"; delBtn.textContent="🗑️";
+      delBtn.onclick=(e)=>{
+        e.stopPropagation(); 
+        delete slots[name]; 
+        saveSlots();
+        showDeleteModal(`Slot "${name}" deleted successfully!`);
+      };
+      wrapper.appendChild(delBtn);
+    }
+    container.appendChild(wrapper);
+  }
+}
+
+function loadSlot(name){
+  const arr=slots[name];
+  totalSeats=arr.length;
+  document.getElementById("namesInput").value=arr.join("\n");
+  generateSeating(false);
+}
+
+function showSlotInputBox(){
+  document.getElementById("slotInputBox").style.display="block";
+  document.getElementById("newSlotName").value="";
+}
+function confirmAddSlot(){
+  const name=document.getElementById("newSlotName").value.trim();
+  if(!name) return alert("Enter slot name!");
+  const arr=document.getElementById("namesInput").value.split("\n").map(n=>n.trim()).filter(n=>n!=="");
+  if(arr.length===0){ alert("Enter some names first!"); return; }
+  slots[name]=arr; saveSlots();
+  document.getElementById("slotInputBox").style.display="none";
+}
+function cancelAddSlot(){ document.getElementById("slotInputBox").style.display="none"; }
+
+function addBox(){ totalSeats++; generateSeating(false); }
+function removeBox(){ if(totalSeats>1) totalSeats--; generateSeating(false); }
+function clearAll(){ totalSeats=1; document.getElementById("namesInput").value=""; generateSeating(false); }
+function closeModal(){ document.getElementById("noticeModal").style.display="none"; }
+
+function showDeleteModal(msg){
+  document.getElementById("deleteModalText").textContent = msg;
+  document.getElementById("deleteModal").style.display = "flex";
+}
+function closeDeleteModal(){
+  document.getElementById("deleteModal").style.display = "none";
+}
+
+function shuffleSeats(){
+  const output=document.getElementById("output");
+  output.innerHTML='<div class="loading">Shuffling...</div>';
+  setTimeout(()=>{
+    generateSeating(true);
+    document.getElementById("noticeModal").style.display="flex";
+  },3000);
+}
+
+function generateSeating(shuffle=false){
+  let names=document.getElementById("namesInput").value.split("\n").map(n=>n.trim()).filter(n=>n!=="");
+  if(shuffle) names.sort(()=>Math.random()-0.5);
+  let filled=[...names];
+  for(let i=names.length;i<totalSeats;i++) filled.push("Seat "+(i+1));
+  const container=document.createElement("div"); container.className="grid";
+  filled.slice(0,totalSeats).forEach(name=>{
+    const div=document.createElement("div"); div.className="seat";
+    if(names.includes(name)) div.classList.add("assigned");
+    div.textContent=name;
+    container.appendChild(div);
+  });
+  const out=document.getElementById("output");
+  out.innerHTML=""; out.appendChild(container);
+}
+
+function toggleTheme(){
+  const body=document.body;
+  const current=body.getAttribute("data-theme");
+  const next=current==="light"?"dark":"light";
+  body.setAttribute("data-theme", next);
+  localStorage.setItem("theme", next);
+}
+
+window.onload=()=>{
+  const theme=localStorage.getItem("theme")||"light"; 
+  document.body.setAttribute("data-theme", theme);
+  renderSlotButtons(); generateSeating(false);
+};
+</script>
+</body>
+</html>
+
