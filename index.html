@@ -39,6 +39,8 @@ body {
   transition: background 0.5s, color 0.5s;
 }
 
+h1 { margin-bottom:10px; }
+
 textarea {
   width: 300px;
   height: 120px;
@@ -83,6 +85,7 @@ button:hover { background: var(--btn-hover); }
   text-align: center;
   font-weight: bold;
   box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+  transition: background 0.3s, transform 0.3s;
 }
 .seat.assigned { background: var(--seat-assigned); color:white; }
 
@@ -121,7 +124,6 @@ button:hover { background: var(--btn-hover); }
 #slotInputBox { display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--modal-bg); padding:30px; border-radius:12px; z-index:1100; width:300px; box-shadow:0 5px 15px rgba(0,0,0,0.3); text-align:center; }
 #slotInputBox input { width:90%; padding:6px; margin-bottom:10px; }
 #slotInputBox button { margin:5px; }
-
 </style>
 </head>
 <body data-theme="light">
@@ -135,12 +137,12 @@ button:hover { background: var(--btn-hover); }
 <textarea id="namesInput" placeholder="Htun Myat Aung-Dev&#10;Wish you luck"></textarea><br>
 
 <div>
-<button onclick="addBox()">➕ Add Box</button>
-<button onclick="removeBox()">➖ Remove Box</button>
-<button onclick="shuffleSeats()">🎲 Shuffle</button>
-<button class="clear-btn" onclick="clearAll()">🗑️ Clear All</button>
-<button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
-<button onclick="showSlotInputBox()">💾 Add Slot</button>
+  <button onclick="addBox()">➕ Add Box</button>
+  <button onclick="removeBox()">➖ Remove Box</button>
+  <button onclick="shuffleSeats()">🎲 Shuffle</button>
+  <button class="clear-btn" onclick="clearAll()">🗑️ Clear All</button>
+  <button class="theme-btn" onclick="toggleTheme()">🌓 Theme</button>
+  <button onclick="showSlotInputBox()">💾 Add Slot</button>
 </div>
 
 <div class="slot-list" id="slotList"></div>
@@ -176,8 +178,9 @@ button:hover { background: var(--btn-hover); }
 let totalSeats=1;
 let slots=JSON.parse(localStorage.getItem("userSlots")||"{}");
 
+// Ensure SEC-3 B exists
 if(!slots["SEC-3 B"]){
-  slots["SEC-3 B"] = ["BTK","HMA","KLLW","LHRD","TOY","TRO","PJ","TSTN","SPPA","SYS","ZSA","PHH","NPPW","JCRMN","WSA"].sort();
+  slots["SEC-3 B"]=["BTK","HMA","KLLW","LHRD","TOY","TRO","PJ","TSTN","SPPA","SYS","ZSA","PHH","NPPW","JCRMN","WSA"].sort();
   saveSlots();
 }
 
@@ -232,15 +235,13 @@ function cancelAddSlot(){ document.getElementById("slotInputBox").style.display=
 function addBox(){ totalSeats++; generateSeating(false); }
 function removeBox(){ if(totalSeats>1) totalSeats--; generateSeating(false); }
 function clearAll(){ totalSeats=1; document.getElementById("namesInput").value=""; generateSeating(false); }
-function closeModal(){ document.getElementById("noticeModal").style.display="none"; }
 
+function closeModal(){ document.getElementById("noticeModal").style.display="none"; }
 function showDeleteModal(msg){
   document.getElementById("deleteModalText").textContent = msg;
   document.getElementById("deleteModal").style.display = "flex";
 }
-function closeDeleteModal(){
-  document.getElementById("deleteModal").style.display = "none";
-}
+function closeDeleteModal(){ document.getElementById("deleteModal").style.display = "none"; }
 
 function shuffleSeats(){
   const output=document.getElementById("output");
@@ -257,9 +258,9 @@ function generateSeating(shuffle=false){
   let filled=[...names];
   for(let i=names.length;i<totalSeats;i++) filled.push("Seat "+(i+1));
   const container=document.createElement("div"); container.className="grid";
-  filled.slice(0,totalSeats).forEach(name=>{
+  filled.slice(0,totalSeats).forEach((name, idx)=>{
     const div=document.createElement("div"); div.className="seat";
-    if(names.includes(name)) div.classList.add("assigned");
+    if(idx < names.length) div.classList.add("assigned");
     div.textContent=name;
     container.appendChild(div);
   });
@@ -278,7 +279,13 @@ function toggleTheme(){
 window.onload=()=>{
   const theme=localStorage.getItem("theme")||"light"; 
   document.body.setAttribute("data-theme", theme);
-  renderSlotButtons(); generateSeating(false);
+  renderSlotButtons(); 
+  generateSeating(false);
+
+  // 🔥 Live update seating as the user types
+  document.getElementById("namesInput").addEventListener("input", ()=>{
+    generateSeating(false);
+  });
 };
 </script>
 </body>
